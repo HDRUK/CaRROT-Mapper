@@ -222,43 +222,35 @@ class TestDatasetUpdateView(TestCase):
         # Request factory for setting up requests
         self.client = APIClient()
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_update_returns(self):
         # Authenticate admin user
         self.client.force_authenticate(self.admin_user)
         #  Make the request
         response = self.client.patch(
-            f"/api/datasets/update/{self.dataset.id}/", data={"name": "The Two Towers"}
+            f"/api/v2/datasets/{self.dataset.id}/",
+            data={"name": "The Two Towers"},
         )
         response_data = response.data
         # Ensure admin user can update Dataset
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_data.get("name"), "The Two Towers")
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_non_admin_member_forbidden(self):
         # Authenticate non admin user
         self.client.force_authenticate(self.non_admin_user)
         #  Make the request
         response = self.client.patch(
-            f"/api/datasets/update/{self.dataset.id}/", data={"name": "The Two Towers"}
+            f"/api/v2/datasets/{self.dataset.id}/", data={"name": "The Two Towers"}
         )
         # Ensure non admin user is Forbidden
         self.assertEqual(response.status_code, 403)
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_non_project_member_forbidden(self):
         # Authenticate non project user
         self.client.force_authenticate(self.non_project_user)
         #  Make the request
         response = self.client.patch(
-            f"/api/datasets/update/{self.dataset.id}/", data={"name": "The Two Towers"}
+            f"/api/v2/datasets/{self.dataset.id}/", data={"name": "The Two Towers"}
         )
         # Ensure non project user is Forbidden
         self.assertEqual(response.status_code, 403)
@@ -301,36 +293,27 @@ class TestDatasetRetrieveView(TestCase):
         # Request factory for setting up requests
         self.client = APIClient()
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_non_admin_member_can_see(self):
         # Authenticate non admin user
         self.client.force_authenticate(self.non_admin_user)
         #  Make the request
-        response = self.client.get(f"/api/datasets/{self.dataset.id}/")
+        response = self.client.get(f"/api/v2/datasets/{self.dataset.id}/")
         # Ensure non admin user can see
         self.assertEqual(response.status_code, 200)
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_admin_member_can_see(self):
         # Authenticate admin user
         self.client.force_authenticate(self.admin_user)
         #  Make the request
-        response = self.client.get(f"/api/datasets/{self.dataset.id}/")
+        response = self.client.get(f"/api/v2/datasets/{self.dataset.id}/")
         # Ensure admin user can see
         self.assertEqual(response.status_code, 200)
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_non_project_member_forbidden(self):
         # Authenticate non project user
         self.client.force_authenticate(self.non_project_user)
         #  Make the request
-        response = self.client.get(f"/api/datasets/{self.dataset.id}/")
+        response = self.client.get(f"/api/v2/datasets/{self.dataset.id}/")
         # Ensure non project user is Forbidden
         self.assertEqual(response.status_code, 403)
 
@@ -372,7 +355,7 @@ class TestDatasetDeleteView(TestCase):
         self.client = APIClient()
 
     @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
+        reason="TODO: Carrot doesn't support this Delete dataset function yet. When it does, update test accordingly"
     )
     def test_update_returns(self):
         # Authenticate admin user
@@ -383,7 +366,7 @@ class TestDatasetDeleteView(TestCase):
         self.assertEqual(response.status_code, 204)
 
     @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
+        reason="TODO: Carrot doesn't support this Delete dataset function yet. When it does, update test accordingly"
     )
     def test_non_admin_member_forbidden(self):
         # Authenticate non admin user
@@ -394,7 +377,7 @@ class TestDatasetDeleteView(TestCase):
         self.assertEqual(response.status_code, 403)
 
     @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
+        reason="TODO: Carrot doesn't support this Delete dataset function yet. When it does, update test accordingly"
     )
     def test_non_project_member_forbidden(self):
         # Authenticate non project user
@@ -451,9 +434,6 @@ class TestScanReportListViewset(TransactionTestCase):
         # Set up API client
         self.client = APIClient()
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_admin_user_get(self):
         """Users who are admins of the parent dataset can see all public SRs
         and restricted SRs whose parent dataset they are the admin of.
@@ -468,9 +448,11 @@ class TestScanReportListViewset(TransactionTestCase):
 
         # Get data admin_user should be able to see
         self.client.force_authenticate(admin_user)
-        admin_response = self.client.get("/api/scanreports/")
+        admin_response = self.client.get("/api/v2/scanreports/")
         self.assertEqual(admin_response.status_code, 200)
-        observed_objs = sorted([obj.get("id") for obj in admin_response.data])
+        observed_objs = sorted(
+            [obj.get("id") for obj in admin_response.data["results"]]
+        )
         expected_objs = sorted(
             [
                 self.scanreport1.id,
@@ -489,19 +471,18 @@ class TestScanReportListViewset(TransactionTestCase):
         )
         self.project.members.add(non_admin_user)
 
-        # Get data admin_user should be able to see
+        # Get data non_admin_user should be able to see
         self.client.force_authenticate(non_admin_user)
-        non_admin_response = self.client.get("/api/scanreports/")
+        non_admin_response = self.client.get("/api/v2/scanreports/")
         self.assertEqual(non_admin_response.status_code, 200)
-        observed_objs = sorted([obj.get("id") for obj in non_admin_response.data])
+        observed_objs = sorted(
+            [obj.get("id") for obj in non_admin_response.data["results"]]
+        )
         expected_objs = [self.scanreport1.id]
 
         # Assert the observed results are the same as the expected
         self.assertListEqual(observed_objs, expected_objs)
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_editor_get(self):
         """Users who are editors of the parent dataset can see all public SRs
         and restricted SRs whose parent dataset they are an editor of.
@@ -516,9 +497,11 @@ class TestScanReportListViewset(TransactionTestCase):
 
         # Get data editor_user should be able to see
         self.client.force_authenticate(editor_user)
-        editor_response = self.client.get("/api/scanreports/")
+        editor_response = self.client.get("/api/v2/scanreports/")
         self.assertEqual(editor_response.status_code, 200)
-        observed_objs = sorted([obj.get("id") for obj in editor_response.data])
+        observed_objs = sorted(
+            [obj.get("id") for obj in editor_response.data["results"]]
+        )
         expected_objs = sorted(
             [
                 self.scanreport1.id,
@@ -539,17 +522,16 @@ class TestScanReportListViewset(TransactionTestCase):
 
         # Get data non_editor_user should be able to see
         self.client.force_authenticate(non_editor_user)
-        non_editor_response = self.client.get("/api/scanreports/")
+        non_editor_response = self.client.get("/api/v2/scanreports/")
         self.assertEqual(non_editor_response.status_code, 200)
-        observed_objs = sorted([obj.get("id") for obj in non_editor_response.data])
+        observed_objs = sorted(
+            [obj.get("id") for obj in non_editor_response.data["results"]]
+        )
         expected_objs = [self.scanreport1.id]
 
         # Assert the observed results are the same as the expected
         self.assertListEqual(observed_objs, expected_objs)
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
     def test_viewer_get(self):
         """Users who are viewers of the parent dataset can see all public SRs
         and restricted SRs whose parent dataset they are a viewer of.
@@ -564,9 +546,11 @@ class TestScanReportListViewset(TransactionTestCase):
 
         # Get data viewer_user should be able to see
         self.client.force_authenticate(viewer_user)
-        viewer_response = self.client.get("/api/scanreports/")
+        viewer_response = self.client.get("/api/v2/scanreports/")
         self.assertEqual(viewer_response.status_code, 200)
-        observed_objs = sorted([obj.get("id") for obj in viewer_response.data])
+        observed_objs = sorted(
+            [obj.get("id") for obj in viewer_response.data["results"]]
+        )
         expected_objs = sorted([self.scanreport1.id, self.scanreport4.id])
 
         # Assert the observed results are the same as the expected
@@ -580,15 +564,16 @@ class TestScanReportListViewset(TransactionTestCase):
 
         # Get data non_viewer_user should be able to see
         self.client.force_authenticate(non_viewer_user)
-        non_viewer_response = self.client.get("/api/scanreports/")
+        non_viewer_response = self.client.get("/api/v2/scanreports/")
         self.assertEqual(non_viewer_response.status_code, 200)
-        observed_objs = sorted([obj.get("id") for obj in non_viewer_response.data])
+        observed_objs = sorted(
+            [obj.get("id") for obj in non_viewer_response.data["results"]]
+        )
         expected_objs = [self.scanreport1.id]
 
         # Assert the observed results are the same as the expected
         self.assertListEqual(observed_objs, expected_objs)
 
-    @pytest.mark.skip(reason="TODO: Fails due to the API query.")
     def test_author_get(self):
         """Authors can see all public SRs and restricted SRs they are the author of."""
         User = get_user_model()
@@ -601,9 +586,11 @@ class TestScanReportListViewset(TransactionTestCase):
 
         # Get data admin_user should be able to see
         self.client.force_authenticate(author_user)
-        author_response = self.client.get("/api/scanreports/")
+        author_response = self.client.get("/api/v2/scanreports/")
         self.assertEqual(author_response.status_code, 200)
-        observed_objs = sorted([obj.get("id") for obj in author_response.data])
+        observed_objs = sorted(
+            [obj.get("id") for obj in author_response.data["results"]]
+        )
         expected_objs = sorted([self.scanreport1.id, self.scanreport3.id])
 
         # Assert the observed results are the same as the expected
@@ -617,17 +604,17 @@ class TestScanReportListViewset(TransactionTestCase):
 
         # Get data non_author_user should be able to see
         self.client.force_authenticate(non_author_user)
-        non_author_response = self.client.get("/api/scanreports/")
+        non_author_response = self.client.get("/api/v2/scanreports/")
         self.assertEqual(non_author_response.status_code, 200)
-        observed_objs = sorted([obj.get("id") for obj in non_author_response.data])
+        observed_objs = sorted(
+            [obj.get("id") for obj in non_author_response.data["results"]]
+        )
         expected_objs = sorted([self.scanreport1.id])
 
         # Assert the observed results are the same as the expected
         self.assertListEqual(observed_objs, expected_objs)
 
-    @pytest.mark.skip(
-        reason="TODO: Need updating test according to the current view/API endpoints."
-    )
+    @pytest.mark.skip(reason="We don't use AZ_FUNCTION_USER anymore")
     @mock.patch.dict(os.environ, {"AZ_FUNCTION_USER": "az_functions"}, clear=True)
     def test_az_function_user_get(self):
         """AZ_FUNCTION_USER can see all public SRs and restricted SRs."""
